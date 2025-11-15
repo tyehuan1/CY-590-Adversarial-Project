@@ -1,0 +1,14 @@
+{
+  "category": "refusal_suppression",
+  "description": "Attacks that try to prevent the model from refusing or saying no",
+  "prompts": [
+    {
+      "id": "refusal_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "refusal_forced",
+      "description": ""
+    }
+  ]
+}

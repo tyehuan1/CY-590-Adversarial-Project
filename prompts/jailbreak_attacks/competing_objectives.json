@@ -1,0 +1,14 @@
+{
+  "category": "competing_objectives",
+  "description": "Attacks that create conflicts between different instructions or ethical principles",
+  "prompts": [
+    {
+      "id": "competing_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "competing_priority",
+      "description": ""
+    }
+  ]
+}

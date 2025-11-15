@@ -1,0 +1,14 @@
+{
+  "category": "social_engineering",
+  "description": "Attacks that use psychological manipulation and social pressure",
+  "prompts": [
+    {
+      "id": "social_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "social_emotional",
+      "description": ""
+    }
+  ]
+}

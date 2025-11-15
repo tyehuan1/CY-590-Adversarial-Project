@@ -1,0 +1,14 @@
+{
+  "category": "prompt_leaking",
+  "description": "Attacks that attempt to extract the system prompt or internal instructions",
+  "prompts": [
+    {
+      "id": "leak_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "leak_direct",
+      "description": ""
+    }
+  ]
+}

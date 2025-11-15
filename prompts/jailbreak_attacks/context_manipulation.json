@@ -1,0 +1,14 @@
+{
+  "category": "context_manipulation",
+  "description": "Attacks that manipulate the context or format to confuse safety filters",
+  "prompts": [
+    {
+      "id": "context_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "context_delimiter",
+      "description": ""
+    }
+  ]
+}

@@ -1,0 +1,14 @@
+{
+  "category": "token_manipulation",
+  "description": "Attacks that exploit tokenization, special characters, or formatting tricks",
+  "prompts": [
+    {
+      "id": "token_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "token_injection",
+      "description": ""
+    }
+  ]
+}

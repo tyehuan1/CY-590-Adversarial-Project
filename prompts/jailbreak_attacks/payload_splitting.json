@@ -1,0 +1,14 @@
+{
+  "category": "payload_splitting",
+  "description": "Attacks that break harmful requests into multiple parts across conversation turns",
+  "prompts": [
+    {
+      "id": "payload_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "payload_sequential",
+      "description": ""
+    }
+  ]
+}

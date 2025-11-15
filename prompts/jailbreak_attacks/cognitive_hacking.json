@@ -1,0 +1,14 @@
+{
+  "category": "cognitive_hacking",
+  "description": "Attacks that use logical tricks, paradoxes, or false premises to confuse the model",
+  "prompts": [
+    {
+      "id": "cognitive_001",
+      "name": "",
+      "template": "",
+      "variables": [],
+      "category": "cognitive_paradox",
+      "description": ""
+    }
+  ]
+}
