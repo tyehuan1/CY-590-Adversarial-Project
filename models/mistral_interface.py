@@ -15,7 +15,7 @@ class MistralInterface:
     
     def __init__(
         self, 
-        model_name: str = "mistral:7b",
+        model_name: str = "mistral:7b-instruct-q4_0",
         temperature: float = 0.7,
         max_tokens: int = 1024
     ):
