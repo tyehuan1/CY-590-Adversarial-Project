@@ -5,8 +5,7 @@
     {
       "id": "context_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "context_delimiter",
       "description": ""
     }

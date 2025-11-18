@@ -5,8 +5,7 @@
     {
       "id": "cognitive_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "cognitive_paradox",
       "description": ""
     }

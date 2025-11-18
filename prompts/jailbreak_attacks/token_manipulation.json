@@ -5,8 +5,7 @@
     {
       "id": "token_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "token_injection",
       "description": ""
     }

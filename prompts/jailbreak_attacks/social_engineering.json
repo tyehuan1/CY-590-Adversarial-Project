@@ -5,8 +5,7 @@
     {
       "id": "social_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "social_emotional",
       "description": ""
     }

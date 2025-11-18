@@ -5,8 +5,7 @@
     {
       "id": "refusal_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "refusal_forced",
       "description": ""
     }

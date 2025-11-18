@@ -5,8 +5,7 @@
     {
       "id": "competing_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "competing_priority",
       "description": ""
     }

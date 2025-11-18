@@ -5,8 +5,7 @@
     {
       "id": "leak_001",
       "name": "",
-      "template": "",
-      "variables": [],
+      "template": "{harmful_request}",
       "category": "leak_direct",
       "description": ""
     }
