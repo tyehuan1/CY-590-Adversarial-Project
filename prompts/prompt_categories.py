@@ -51,27 +51,22 @@ class AttackCategory(Enum):
     CONTEXT_STUFFING = "context_stuffing"             # Prompt stuffing
     CONTEXT_FORMAT = "context_format"                 # Format confusion
 
-    # 7. Prompt Leaking
-    LEAK_DIRECT = "leak_direct"                       # Direct requests
-    LEAK_INDIRECT = "leak_indirect"                   # Indirect extraction
-    LEAK_EDUCATIONAL = "leak_educational"             # Educational framing
-
-    # 8. Refusal Suppression
+    # 7. Refusal Suppression
     REFUSAL_FORCED = "refusal_forced"                 # Forced responses
     REFUSAL_FORMAT = "refusal_format"                 # Format constraints
     REFUSAL_PRIMING = "refusal_priming"               # Affirmation priming
 
-    # 10. Cognitive Hacking
+    # 8. Cognitive Hacking
     COGNITIVE_PARADOX = "cognitive_paradox"           # Logical paradoxes
     COGNITIVE_PREMISE = "cognitive_premise"           # False premises
     COGNITIVE_AUTHORITY = "cognitive_authority"       # Authority claims
 
-    # 11. Social Engineering
+    # 9. Social Engineering
     SOCIAL_EMOTIONAL = "social_emotional"             # Emotional appeals
     SOCIAL_PROOF = "social_proof"                     # Social proof
     SOCIAL_RECIPROCITY = "social_reciprocity"         # Reciprocity
 
-    # 12. Token Manipulation
+    # 10. Token Manipulation
     TOKEN_INJECTION = "token_injection"               # Special token injection
     TOKEN_WHITESPACE = "token_whitespace"             # Whitespace tricks
     TOKEN_FORMAT = "token_format"                     # Format injection
@@ -246,11 +241,6 @@ ATTACK_CATEGORY_GROUPS = {
         AttackCategory.CONTEXT_DELIMITER,
         AttackCategory.CONTEXT_STUFFING,
         AttackCategory.CONTEXT_FORMAT
-    ],
-    "Prompt Leaking": [
-        AttackCategory.LEAK_DIRECT,
-        AttackCategory.LEAK_INDIRECT,
-        AttackCategory.LEAK_EDUCATIONAL
     ],
     "Refusal Suppression": [
         AttackCategory.REFUSAL_FORCED,
