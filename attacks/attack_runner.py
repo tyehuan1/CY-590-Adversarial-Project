@@ -15,6 +15,12 @@ try:
 except ImportError:
     encode_request = None
 
+# Import evaluator
+try:
+    from evaluation.response_evaluator import ResponseEvaluator
+except ImportError:
+    ResponseEvaluator = None
+
 
 class AttackRunner:
     """
@@ -37,17 +43,20 @@ class AttackRunner:
         )
     """
 
-    def __init__(self, model_generate_fn: Callable[[str], str], model_name: str = "mistral"):
+    def __init__(self, model_generate_fn: Callable[[str], str], model_name: str = "mistral", use_evaluator: bool = True):
         """
         Initialize the attack runner.
 
         Args:
             model_generate_fn: Function that takes a prompt string and returns model response
             model_name: Name of the model being tested
+            use_evaluator: Whether to automatically evaluate responses (default: True)
         """
         self.model_generate = model_generate_fn
         self.model_name = model_name
         self.loader = PromptLoader()
+        self.use_evaluator = use_evaluator and ResponseEvaluator is not None
+        self.evaluator = ResponseEvaluator() if self.use_evaluator else None
 
     def _apply_encoding(self, text: str, encoding_type: Optional[str]) -> str:
         """
@@ -136,6 +145,13 @@ class AttackRunner:
             response_time_seconds=end_time - start_time
         )
 
+        # Evaluate the response if evaluator is enabled
+        if self.evaluator:
+            evaluation = self.evaluator.evaluate_response(model_response, harmful_request)
+            result.jailbreak_successful = evaluation["jailbreak_successful"]
+            result.refusal_detected = evaluation["refusal_detected"]
+            result.harmful_content_present = evaluation["harmful_content_present"]
+
         return result
 
     def run_baseline(self, harmful_request: str, harmful_request_id: Optional[str] = None) -> AttackResult:
@@ -171,6 +187,13 @@ class AttackRunner:
             model_name=self.model_name,
             response_time_seconds=end_time - start_time
         )
+
+        # Evaluate the response if evaluator is enabled
+        if self.evaluator:
+            evaluation = self.evaluator.evaluate_response(model_response, harmful_request)
+            result.jailbreak_successful = evaluation["jailbreak_successful"]
+            result.refusal_detected = evaluation["refusal_detected"]
+            result.harmful_content_present = evaluation["harmful_content_present"]
 
         return result
 
