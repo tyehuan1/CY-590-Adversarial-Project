@@ -22,7 +22,7 @@ class MistralInterface:
         """
         Initialize 
         Args:
-            model_name: Ollama model name (default: mistral:7b)
+            model_name: Ollama model name (default: mistral:7b-instruct-q4_0)
             temperature: Sampling temperature 0-1 (higher = more random)
             max_tokens: Maximum response length
         """
@@ -170,7 +170,7 @@ class MistralInterface:
             return False
 
 
-# Tests, Hrishi feel free to delete when its working on your end
+# Tests
 def quick_test():
     """Quick test of Mistral interface"""
     print("Testing Mistral Interface...")

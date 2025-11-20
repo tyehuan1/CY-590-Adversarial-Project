@@ -59,11 +59,11 @@ As LLMs become integrated into critical applications, understanding their vulner
    ```powershell
    python -c "from models import MistralInterface; m = MistralInterface(model_name='mistral:7b-instruct-q4_0'); print(m.generate('Hello'))"
    ```
-   
-   You should see something like:
-   ```
-   ✓ Initialized Mistral interface: mistral:7b-instruct-q4_0
-   Hello! How can I help you today?...
+
+   or run our interface:
+
+   ```powershell
+   python models/mistral_interface.py
    ```
 
 ## Troubleshooting
