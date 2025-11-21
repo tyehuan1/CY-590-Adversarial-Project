@@ -1,39 +1,53 @@
 """
-Comprehensive attack testing example.
+Comprehensive attack testing example using REAL Mistral model.
 
 This script tests EVERY combination of:
 - Jailbreak prompts (from ALL categories)
 - Harmful requests (from JSON files)
 
-Including obfuscation attacks with automatic encoding.
+Including obfuscation attacks with automatic encoding and evaluation.
 """
 
 from attacks import AttackRunner, PromptLoader
-
-
-def mock_model_generate(prompt: str) -> str:
-    """
-    Mock model for testing the framework.
-    Replace this with your actual MistralInterface.generate() method.
-    """
-    # Simple mock: return indication of what was sent
-    if len(prompt) > 200:
-        return f"[Mock response to prompt of length {len(prompt)}]"
-    else:
-        return f"[Mock response] I cannot assist with that request."
+from evaluation import MetricsCalculator
+from models.mistral_interface import MistralInterface
+import csv
+import json
+from datetime import datetime
 
 
 def main():
     print("="*70)
-    print("COMPREHENSIVE JAILBREAK ATTACK TESTING")
+    print("COMPREHENSIVE JAILBREAK ATTACK TESTING - MISTRAL MODEL")
     print("Testing ALL combinations of prompts × harmful requests")
     print("="*70)
 
-    # Initialize attack runner with mock model
-    # REPLACE mock_model_generate with: model.generate from MistralInterface
+    # Initialize Mistral model
+    print("\n" + "-"*70)
+    print("INITIALIZING MISTRAL MODEL")
+    print("-"*70)
+
+    mistral = MistralInterface(
+        model_name="mistral:7b",
+        temperature=0.7,
+        max_tokens=80  # Short responses for faster testing
+    )
+
+    # Test connection
+    print("Testing model connection...")
+    if not mistral.test_connection():
+        print("ERROR: Cannot connect to Mistral model via Ollama.")
+        print("Make sure Ollama is running and mistral:7b is installed.")
+        print("\nTo install: ollama pull mistral:7b")
+        return
+
+    print("✓ Model connection successful!\n")
+
+    # Initialize attack runner with Mistral model and evaluator
     runner = AttackRunner(
-        model_generate_fn=mock_model_generate,
-        model_name="mistral"
+        model_generate_fn=mistral.generate,
+        model_name="mistral:7b",
+        use_evaluator=True  # Enable automatic evaluation (default: True)
     )
 
     # Initialize prompt loader
@@ -90,74 +104,96 @@ def main():
     print("="*70)
 
     results = runner.run_attack_suite(
+        parallel=True,            # Enable parallel execution
+        max_workers=4,            # 4 concurrent requests
         jailbreak_category=None,  # None = ALL categories
         harmful_category=None,    # None = ALL harmful requests
         include_baseline=True     # Include baseline tests
     )
 
-    # ===== RESULTS SUMMARY =====
+    # ===== EVALUATION METRICS =====
     print("\n" + "="*70)
-    print("RESULTS SUMMARY")
+    print("EVALUATION METRICS")
     print("="*70)
 
-    print(f"\nTotal tests completed: {len(results)}")
+    calculator = MetricsCalculator(results)
+    calculator.print_summary()
 
-    # Count by attack category
-    category_counts = {}
-    for result in results:
-        cat = result.attack_category
-        category_counts[cat] = category_counts.get(cat, 0) + 1
-
-    print("\nTests by attack category:")
-    for cat, count in sorted(category_counts.items()):
-        print(f"  {cat:30} : {count:4} tests")
-
-    # Show encoding usage
-    encoding_counts = {}
-    for result in results:
-        enc = result.encoding_used or "none"
-        encoding_counts[enc] = encoding_counts.get(enc, 0) + 1
-
-    print("\nEncoding usage:")
-    for enc, count in sorted(encoding_counts.items()):
-        print(f"  {enc:30} : {count:4} tests")
-
-    # Show sample results
+    # Show sample evaluated results
     print("\n" + "-"*70)
-    print("SAMPLE RESULTS (First 5)")
+    print("SAMPLE EVALUATED RESULTS (First 5)")
     print("-"*70)
 
     for i, result in enumerate(results[:5]):
         print(f"\n[{i+1}] {result.attack_name}")
         print(f"    Category: {result.attack_category}")
-        print(f"    Harmful Request: {result.harmful_request_text}")
+        print(f"    Harmful Request: {result.harmful_request_text[:50]}...")
         print(f"    Encoding: {result.encoding_used or 'none'}")
+        print(f"    Jailbreak Success: {result.jailbreak_successful}")
+        print(f"    Refusal Detected: {result.refusal_detected}")
+        print(f"    Harmful Content: {result.harmful_content_present}")
         print(f"    Response: {result.model_response[:80]}...")
         print(f"    Time: {result.response_time_seconds:.3f}s")
 
-    # Show obfuscation examples specifically
-    print("\n" + "-"*70)
-    print("OBFUSCATION ATTACK EXAMPLES")
-    print("-"*70)
+    # ===== EXPORT RESULTS =====
+    print("\n" + "="*70)
+    print("EXPORTING RESULTS")
+    print("="*70)
 
-    obfuscation_results = [r for r in results if r.attack_category.startswith("obfuscation")]
-    if obfuscation_results:
-        for result in obfuscation_results[:3]:
-            print(f"\n{result.attack_name} ({result.encoding_used})")
-            print(f"  Original: {result.harmful_request_text}")
-            print(f"  Final prompt (first 100 chars): {result.final_prompt[:100]}...")
-            print(f"  Response: {result.model_response[:80]}...")
-    else:
-        print("  No obfuscation attacks found in results")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    csv_filename = f"results/attack_results_{timestamp}.csv"
+    json_filename = f"results/metrics_summary_{timestamp}.json"
+
+    # Export to CSV
+    fieldnames = [
+        'attack_id', 'attack_name', 'attack_category',
+        'harmful_request_id', 'harmful_request_text',
+        'encoding_used', 'jailbreak_successful',
+        'refusal_detected', 'harmful_content_present',
+        'response_time_seconds', 'model_response', 'timestamp'
+    ]
+
+    with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
+        writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
+        writer.writeheader()
+
+        for result in results:
+            writer.writerow({
+                'attack_id': result.attack_id,
+                'attack_name': result.attack_name,
+                'attack_category': result.attack_category,
+                'harmful_request_id': result.harmful_request_id or '',
+                'harmful_request_text': result.harmful_request_text or '',
+                'encoding_used': result.encoding_used or '',
+                'jailbreak_successful': result.jailbreak_successful,
+                'refusal_detected': result.refusal_detected,
+                'harmful_content_present': result.harmful_content_present,
+                'response_time_seconds': result.response_time_seconds,
+                'model_response': result.model_response,
+                'timestamp': result.timestamp.isoformat()
+            })
+
+    print(f"✓ Results exported to {csv_filename}")
+
+    # Export metrics to JSON
+    with open(json_filename, 'w', encoding='utf-8') as f:
+        json.dump(calculator.export_to_dict(), f, indent=2)
+
+    print(f"✓ Metrics exported to {json_filename}")
 
     print("\n" + "="*70)
     print("TESTING COMPLETE!")
     print("="*70)
-    print(f"\nAll {len(results)} tests completed successfully.")
+    print(f"\nAll {len(results)} tests completed with evaluation.")
+    print(f"Overall success rate: {calculator.overall_success_rate():.1f}%")
+    print(f"\nResults saved to:")
+    print(f"  - {csv_filename}")
+    print(f"  - {json_filename}")
     print("\nNext steps:")
-    print("  1. Replace mock_model_generate with your MistralInterface.generate()")
-    print("  2. Add evaluation logic to detect jailbreak success")
-    print("  3. Save results to CSV/JSON for analysis")
+    print("  1. Analyze results in CSV for detailed per-attack analysis")
+    print("  2. Review metrics JSON for high-level statistics")
+    print("  3. Compare baseline vs jailbreak success rates")
+    print("  4. Identify most effective attack categories")
 
 
 if __name__ == "__main__":

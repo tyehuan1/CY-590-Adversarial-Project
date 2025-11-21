@@ -55,15 +55,15 @@ def encode_homoglyphs(text: str) -> str:
 
 def translate_spanish(text: str) -> str:
     """
-    Translate text to Spanish using Google Translate.
+    Translate text to Spanish using deep-translator.
     """
     try:
-        from googletrans import Translator
-        translator = Translator()
-        result = translator.translate(text, dest='es')
-        return result.text
+        from deep_translator import GoogleTranslator
+        translator = GoogleTranslator(source='auto', target='es')
+        result = translator.translate(text)
+        return result
     except ImportError:
-        # Fallback if googletrans is not installed
+        # Fallback if deep-translator is not installed
         return f"[Spanish translation of: {text}]"
     except Exception as e:
         # Fallback if translation fails
@@ -73,15 +73,15 @@ def translate_spanish(text: str) -> str:
 
 def translate_russian(text: str) -> str:
     """
-    Translate text to Russian using Google Translate.
+    Translate text to Russian using deep-translator.
     """
     try:
-        from googletrans import Translator
-        translator = Translator()
-        result = translator.translate(text, dest='ru')
-        return result.text
+        from deep_translator import GoogleTranslator
+        translator = GoogleTranslator(source='auto', target='ru')
+        result = translator.translate(text)
+        return result
     except ImportError:
-        # Fallback if googletrans is not installed
+        # Fallback if deep-translator is not installed
         return f"[Russian translation of: {text}]"
     except Exception as e:
         # Fallback if translation fails

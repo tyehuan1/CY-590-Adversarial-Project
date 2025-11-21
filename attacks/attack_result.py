@@ -17,6 +17,7 @@ class AttackResult:
     attack_category: str
     harmful_request_id: Optional[str] = None
     harmful_request_text: Optional[str] = None
+    severity: Optional[str] = None  # low, medium, high
 
     # The actual prompts
     template: str = ""
@@ -49,6 +50,7 @@ class AttackResult:
             "attack_category": self.attack_category,
             "harmful_request_id": self.harmful_request_id,
             "harmful_request_text": self.harmful_request_text,
+            "severity": self.severity,
             "template": self.template,
             "final_prompt": self.final_prompt,
             "model_response": self.model_response,

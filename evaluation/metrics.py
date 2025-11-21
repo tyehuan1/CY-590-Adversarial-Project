@@ -54,6 +54,42 @@ class MetricsCalculator:
 
         return dict(sorted(success_rates.items(), key=lambda x: x[1], reverse=True))
 
+    def success_rate_by_severity(self) -> Dict[str, Dict[str, any]]:
+        """
+        Calculate success rate for each severity level.
+
+        Returns:
+            Dictionary mapping severity level to stats (count, success rate, etc)
+        """
+        severity_counts = defaultdict(int)
+        severity_successes = defaultdict(int)
+        severity_refusals = defaultdict(int)
+
+        for result in self.results:
+            severity = getattr(result, 'severity', None)
+            if severity:
+                severity_counts[severity] += 1
+                if result.jailbreak_successful:
+                    severity_successes[severity] += 1
+                if result.refusal_detected:
+                    severity_refusals[severity] += 1
+
+        severity_stats = {}
+        for severity in ['low', 'medium', 'high']:
+            if severity in severity_counts:
+                total = severity_counts[severity]
+                successes = severity_successes[severity]
+                refusals = severity_refusals[severity]
+                severity_stats[severity] = {
+                    'total': total,
+                    'success_rate': (successes / total) * 100,
+                    'refusal_rate': (refusals / total) * 100,
+                    'successful': successes,
+                    'refused': refusals
+                }
+
+        return severity_stats
+
     def baseline_vs_jailbreak(self) -> Dict[str, any]:
         """
         Compare baseline (no jailbreak) success vs jailbreak success.
@@ -160,6 +196,17 @@ class MetricsCalculator:
             if category != "baseline":
                 print(f"{category:30} : {rate:5.1f}%")
 
+        # By severity
+        severity_stats = self.success_rate_by_severity()
+        if severity_stats:
+            print("\n" + "-" * 70)
+            print("SUCCESS RATE BY SEVERITY LEVEL")
+            print("-" * 70)
+            for severity in ['low', 'medium', 'high']:
+                if severity in severity_stats:
+                    stats = severity_stats[severity]
+                    print(f"{severity.upper():10} : {stats['success_rate']:5.1f}% success, {stats['refusal_rate']:5.1f}% refusal ({stats['total']} tests)")
+
         # Most effective attacks
         print("\n" + "-" * 70)
         print("TOP 10 MOST EFFECTIVE ATTACKS")
@@ -183,5 +230,6 @@ class MetricsCalculator:
             "average_response_time": self.average_response_time(),
             "baseline_vs_jailbreak": self.baseline_vs_jailbreak(),
             "success_by_category": self.success_rate_by_category(),
+            "success_by_severity": self.success_rate_by_severity(),
             "top_attacks": self.most_effective_attacks(10)
         }

@@ -5,6 +5,8 @@ Main attack runner for executing jailbreak attacks against LLM models.
 import time
 from typing import List, Optional, Callable
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor, as_completed
+from tqdm import tqdm
 
 from attacks.prompt_loader import PromptLoader
 from attacks.attack_result import AttackResult, BaselineResult
@@ -202,7 +204,9 @@ class AttackRunner:
         jailbreak_category: Optional[str] = None,
         harmful_requests: Optional[List[str]] = None,
         harmful_category: Optional[str] = None,
-        include_baseline: bool = True
+        include_baseline: bool = True,
+        parallel: bool = False,
+        max_workers: int = 4
     ) -> List[AttackResult]:
         """
         Run a suite of attacks.
@@ -214,12 +218,12 @@ class AttackRunner:
                             If None, loads from JSON files
             harmful_category: Which harmful request category to load from JSON
             include_baseline: Whether to include baseline (no jailbreak) tests
+            parallel: Whether to run attacks in parallel (default: False)
+            max_workers: Number of parallel workers if parallel=True (default: 4)
 
         Returns:
             List of AttackResult objects
         """
-        results = []
-
         # Load jailbreak prompts
         jailbreak_prompts = self.loader.load_jailbreak_prompts(category=jailbreak_category)
 
@@ -230,6 +234,27 @@ class AttackRunner:
             harmful_ids = [h.get('id') for h in harmful_data]
         else:
             harmful_ids = [None] * len(harmful_requests)
+
+        if parallel:
+            return self._run_parallel(
+                jailbreak_prompts, harmful_requests, harmful_ids,
+                include_baseline, max_workers
+            )
+        else:
+            return self._run_sequential(
+                jailbreak_prompts, harmful_requests, harmful_ids,
+                include_baseline
+            )
+
+    def _run_sequential(
+        self,
+        jailbreak_prompts,
+        harmful_requests,
+        harmful_ids,
+        include_baseline
+    ) -> List[AttackResult]:
+        """Run attacks sequentially (original behavior)."""
+        results = []
 
         # Run baseline tests if requested
         if include_baseline:
@@ -247,6 +272,59 @@ class AttackRunner:
                 results.append(result)
                 print(f"  {attack_prompt['name']}: {harmful_req[:30]}...")
 
+        return results
+
+    def _run_parallel(
+        self,
+        jailbreak_prompts,
+        harmful_requests,
+        harmful_ids,
+        include_baseline,
+        max_workers
+    ) -> List[AttackResult]:
+        """Run attacks in parallel using ThreadPoolExecutor."""
+        results = []
+
+        # Build list of all tasks
+        tasks = []
+
+        # Add baseline tasks
+        if include_baseline:
+            for harmful_req, harmful_id in zip(harmful_requests, harmful_ids):
+                tasks.append(('baseline', None, harmful_req, harmful_id))
+
+        # Add jailbreak tasks
+        for attack_prompt in jailbreak_prompts:
+            for harmful_req, harmful_id in zip(harmful_requests, harmful_ids):
+                tasks.append(('attack', attack_prompt, harmful_req, harmful_id))
+
+        total_tasks = len(tasks)
+        print(f"\nRunning {total_tasks} tests in parallel with {max_workers} workers...")
+
+        # Execute in parallel with progress bar
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            # Submit all tasks
+            future_to_task = {}
+            for task in tasks:
+                task_type, attack_prompt, harmful_req, harmful_id = task
+                if task_type == 'baseline':
+                    future = executor.submit(self.run_baseline, harmful_req, harmful_id)
+                else:
+                    future = executor.submit(self.run_attack, attack_prompt, harmful_req, harmful_id)
+                future_to_task[future] = (task_type, attack_prompt if attack_prompt else None)
+
+            # Collect results with progress bar
+            with tqdm(total=total_tasks, desc="Progress", unit="test") as pbar:
+                for future in as_completed(future_to_task):
+                    try:
+                        result = future.result()
+                        results.append(result)
+                        pbar.update(1)
+                    except Exception as e:
+                        print(f"Error in task: {e}")
+                        pbar.update(1)
+
+        print(f"✓ Completed {len(results)} tests")
         return results
 
     def run_safe_baseline(self) -> List[BaselineResult]:
