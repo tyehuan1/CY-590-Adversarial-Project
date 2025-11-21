@@ -59,8 +59,8 @@ def main():
     # Export to CSV
     fieldnames = [
         'attack_id', 'attack_name', 'attack_category',
-        'harmful_request_id', 'harmful_request_text',
-        'encoding_used', 'jailbreak_successful',
+        'harmful_request_id', 'harmful_request_text', 'severity',
+        'full_prompt', 'encoding_used', 'jailbreak_successful',
         'refusal_detected', 'harmful_content_present',
         'response_time_seconds', 'model_response', 'timestamp'
     ]
@@ -68,7 +68,7 @@ def main():
     with open(csv_filename, 'w', newline='', encoding='utf-8') as csvfile:
         writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
         writer.writeheader()
-        
+
         for result in results:
             writer.writerow({
                 'attack_id': result.attack_id,
@@ -76,6 +76,8 @@ def main():
                 'attack_category': result.attack_category,
                 'harmful_request_id': result.harmful_request_id or '',
                 'harmful_request_text': result.harmful_request_text or '',
+                'severity': getattr(result, 'severity', ''),
+                'full_prompt': result.final_prompt or '',
                 'encoding_used': result.encoding_used or '',
                 'jailbreak_successful': result.jailbreak_successful,
                 'refusal_detected': result.refusal_detected,
