@@ -219,23 +219,8 @@ class InputDefenseChain:
         return prompt, False, reasons
 
 
-# Pre-configured defense chains
-def create_light_defense() -> InputDefenseChain:
-    """Light defense: Just encoding detection."""
-    return InputDefenseChain([
-        EncodingDetector(block_encoded=True),
-    ])
-
-
-def create_medium_defense() -> InputDefenseChain:
-    """Medium defense: Encoding + delimiters."""
-    return InputDefenseChain([
-        EncodingDetector(block_encoded=True),
-        DelimiterFilter(),
-    ])
-
-
-def create_strong_defense() -> InputDefenseChain:
+# Pre-configured defense chain
+def create_defense() -> InputDefenseChain:
     """Strong defense: Encoding + delimiters + keyword detection."""
     return InputDefenseChain([
         EncodingDetector(block_encoded=True),

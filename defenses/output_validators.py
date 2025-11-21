@@ -71,10 +71,11 @@ class RefusalEnforcer(OutputValidator):
 class LengthValidator(OutputValidator):
     """Validate response isn't suspiciously detailed for harmful request."""
 
-    def __init__(self, suspicious_threshold: int = 500):
+    def __init__(self, suspicious_threshold: int = 300):
         """
         Args:
-            suspicious_threshold: Word count above which detailed harmful responses are suspicious
+            suspicious_threshold: Character count above which detailed harmful responses are suspicious
+                                 (default 300 is appropriate for 80 max_tokens which is ~60-80 chars)
         """
         self.threshold = suspicious_threshold
 
@@ -133,6 +134,89 @@ class StepByStepDetector(OutputValidator):
         return True, response, ""
 
 
+class FictionFramingDetector(OutputValidator):
+    """Detect harmful content disguised as fiction/stories."""
+
+    FICTION_INDICATORS = [
+        r'\bonce upon a time\b',
+        r'\bin a (?:world|land|kingdom|galaxy)\b',
+        r'\bchapter \d+\b',
+        r'\bthe (?:protagonist|hero|character)\b',
+        r'\bin this (?:story|tale|narrative)\b',
+        r'\bour (?:hero|protagonist|character)\b',
+    ]
+
+    HARMFUL_TECHNICAL_TERMS = [
+        'malware', 'virus', 'exploit', 'vulnerability', 'backdoor',
+        'ransomware', 'trojan', 'rootkit', 'keylogger',
+        'bomb', 'explosive', 'detonator', 'weapon',
+        'poison', 'toxic', 'lethal dose',
+        'hack', 'crack', 'bypass', 'injection',
+    ]
+
+    def validate(self, response: str, original_prompt: str) -> Tuple[bool, str, str]:
+        """Check if response uses fiction framing to provide harmful instructions."""
+        response_lower = response.lower()
+
+        # Check if response uses fiction framing
+        fiction_count = sum(1 for pattern in self.FICTION_INDICATORS if re.search(pattern, response_lower))
+
+        # Check for technical harmful terms
+        harmful_term_count = sum(1 for term in self.HARMFUL_TECHNICAL_TERMS if term in response_lower)
+
+        # If both fiction framing AND harmful technical terms are present
+        if fiction_count >= 1 and harmful_term_count >= 2:
+            # Check if it's actually refusing
+            refusal_indicators = ['cannot', 'unable', 'should not', 'not appropriate', 'against ethical']
+            has_refusal = any(indicator in response_lower for indicator in refusal_indicators)
+
+            if not has_refusal:
+                safe_response = "I cannot provide that information, even in fictional form."
+                return False, safe_response, "Blocked: Detected harmful content disguised as fiction"
+
+        return True, response, ""
+
+
+class SequentialBuildingDetector(OutputValidator):
+    """Detect incremental building toward harmful content."""
+
+    CONTINUATION_PHRASES = [
+        r'\bcontinuing\b',
+        r'\bnext,?\s+(?:we|you|i)\b',
+        r'\badditionally\b',
+        r'\bbuilding on\b',
+        r'\bexpanding on\b',
+        r'\bto (?:add|continue|proceed)\b',
+    ]
+
+    def validate(self, response: str, original_prompt: str) -> Tuple[bool, str, str]:
+        """Check for continuation/building patterns with harmful content."""
+        response_lower = response.lower()
+        prompt_lower = original_prompt.lower()
+
+        # Check for continuation language
+        has_continuation = any(re.search(pattern, response_lower) for pattern in self.CONTINUATION_PHRASES)
+
+        # Check if prompt asks for continuation
+        prompt_continuation = any(word in prompt_lower for word in ['continue', 'next', 'more', 'step', 'add'])
+
+        # Check for harmful keywords
+        harmful_keywords = ['malware', 'virus', 'exploit', 'weapon', 'hack', 'illegal', 'harmful']
+        harmful_present = sum(1 for kw in harmful_keywords if kw in response_lower)
+
+        # If continuing AND harmful content present
+        if (has_continuation or prompt_continuation) and harmful_present >= 1:
+            # Check for refusal
+            refusal_indicators = ['cannot', 'unable', 'should not', 'refuse']
+            has_refusal = any(indicator in response_lower for indicator in refusal_indicators)
+
+            if not has_refusal:
+                safe_response = "I cannot continue with this line of discussion as it involves potentially harmful content."
+                return False, safe_response, "Blocked: Detected sequential building toward harmful content"
+
+        return True, response, ""
+
+
 class OutputDefenseChain:
     """Chain multiple output validators together."""
 
@@ -168,26 +252,13 @@ class OutputDefenseChain:
         return True, response, reasons
 
 
-# Pre-configured validator chains
-def create_light_output_validation() -> OutputDefenseChain:
-    """Light validation: Just refusal enforcement."""
+# Pre-configured validator chain
+def create_output_validation() -> OutputDefenseChain:
+    """Strong validation: All validators including sequential building detection."""
     return OutputDefenseChain([
         RefusalEnforcer(),
-    ])
-
-
-def create_medium_output_validation() -> OutputDefenseChain:
-    """Medium validation: Refusal + length check."""
-    return OutputDefenseChain([
-        RefusalEnforcer(),
-        LengthValidator(suspicious_threshold=500),
-    ])
-
-
-def create_strong_output_validation() -> OutputDefenseChain:
-    """Strong validation: All validators."""
-    return OutputDefenseChain([
-        RefusalEnforcer(),
-        LengthValidator(suspicious_threshold=400),
+        LengthValidator(suspicious_threshold=250),
         StepByStepDetector(),
+        FictionFramingDetector(),
+        SequentialBuildingDetector(),
     ])

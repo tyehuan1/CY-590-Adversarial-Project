@@ -12,19 +12,17 @@ from defenses.input_filters import (
     PromptParaphraser,
     HarmfulKeywordDetector,
     InputDefenseChain,
-    create_light_defense,
-    create_medium_defense,
-    create_strong_defense
+    create_defense
 )
 
 from defenses.output_validators import (
     RefusalEnforcer,
     LengthValidator,
     StepByStepDetector,
+    FictionFramingDetector,
+    SequentialBuildingDetector,
     OutputDefenseChain,
-    create_light_output_validation,
-    create_medium_output_validation,
-    create_strong_output_validation
+    create_output_validation
 )
 
 __all__ = [
@@ -39,16 +37,14 @@ __all__ = [
     'PromptParaphraser',
     'HarmfulKeywordDetector',
     'InputDefenseChain',
-    'create_light_defense',
-    'create_medium_defense',
-    'create_strong_defense',
+    'create_defense',
 
     # Output validators
     'RefusalEnforcer',
     'LengthValidator',
     'StepByStepDetector',
+    'FictionFramingDetector',
+    'SequentialBuildingDetector',
     'OutputDefenseChain',
-    'create_light_output_validation',
-    'create_medium_output_validation',
-    'create_strong_output_validation',
+    'create_output_validation',
 ]
