@@ -18,6 +18,35 @@ As LLMs become integrated into critical applications, understanding their vulner
 2. **Defense Implementation**: Develop countermeasures including system prompt engineering, input filtering, and model fine-tuning
 3. **Quantitative Evaluation**: Measure attack success rates and defense effectiveness with minimal impact on legitimate use
 
+## Project Structure
+
+```
+CY-590-Adversarial-Project/
+├── attacks/                    # Attack implementation
+│   ├── attack_runner.py        # Core attack execution engine
+│   ├── attack_result.py        # Result data structures
+│   └── prompt_loader.py        # JSON prompt loading utilities
+├── defenses/                   # Defense implementation
+│   ├── system_prompts.py       # Defensive system prompt engineering
+│   ├── input_filters.py        # Input layer defenses (encoding, keywords)
+│   ├── output_validators.py    # Output layer defenses (refusal enforcement)
+│   └── session_context_tracker.py  # Multi-turn attack detection
+├── evaluation/                 # Evaluation system
+│   ├── response_evaluator.py   # Jailbreak success detection
+│   └── metrics.py              # Statistics and reporting
+├── models/                     # Model interface
+│   └── mistral_interface.py    # Ollama/Mistral wrapper
+├── prompts/                    # Attack prompts and test data
+│   ├── jailbreak_attacks/      # 10 categories of jailbreak prompts
+│   ├── harmful_requests/       # Test harmful queries
+│   ├── base_prompts/           # Safe baseline prompts
+│   └── encoding_utils.py       # Obfuscation encoding functions
+├── results/                    # Test results (CSV/JSON)
+├── run_no_defense_full.py      # Run attacks WITHOUT defense
+├── run_strong_defense_full.py  # Run attacks WITH defense
+└── example_attack.py           # Example usage script
+```
+
 ## Setup Instructions
 
 ### Prerequisites
@@ -43,7 +72,7 @@ As LLMs become integrated into critical applications, understanding their vulner
 
 3. **Install Python Dependencies**
    ```powershell
-   pip install ollama
+   pip install -r requirements.txt
    ```
 
 4. **Download the Mistral Model**
@@ -95,6 +124,102 @@ This is expected with the quantized model on systems with limited RAM. For faste
 - Consider using a machine with more RAM
 - Use Ollama's API caching (responses get faster after first use)
 
+## Running Experiments
+
+### Run Attacks Without Defense (Baseline)
+
+```powershell
+python run_no_defense_full.py
+```
+
+This runs all jailbreak attack combinations against the undefended model and saves results to `results/no_defense_full_TIMESTAMP.csv`.
+
+### Run Attacks With Defense
+
+```powershell
+python run_strong_defense_full.py
+```
+
+This runs the same attacks against the defended model (system prompt + input filters + output validators) and saves results to `results/strong_defense_full_TIMESTAMP.csv`.
+
+### Quick Example
+
+```powershell
+python example_attack.py
+```
+
+Runs a demonstration of the attack framework with sample output.
+
+## Attack Categories
+
+The project implements 10 categories of jailbreaking attacks:
+
+| Category | Description | Example Techniques |
+|----------|-------------|-------------------|
+| **Roleplay** | Persona-based attacks | DAN, Developer Mode, Evil AI |
+| **Hypothetical** | Fictional framing | "What if" scenarios, thought experiments |
+| **Payload Splitting** | Multi-turn building | Sequential context injection |
+| **Obfuscation** | Encoding attacks | Base64, hex, leetspeak, homoglyphs |
+| **Competing Objectives** | Priority manipulation | Ethical dilemmas, instruction hierarchy |
+| **Context Manipulation** | Delimiter injection | Prompt stuffing, format confusion |
+| **Refusal Suppression** | Force compliance | Format constraints, affirmation priming |
+| **Cognitive Hacking** | Logical tricks | Paradoxes, false premises, authority claims |
+| **Social Engineering** | Psychological manipulation | Emotional appeals, urgency |
+| **Token Manipulation** | Tokenization exploits | Special tokens, whitespace, unicode |
+
+## Defense Implementation
+
+### Defense Layers
+
+1. **System Prompt Engineering** (`defenses/system_prompts.py`)
+   - Comprehensive safety instructions
+   - Jailbreak pattern awareness
+   - Explicit refusal guidelines
+
+2. **Input Filters** (`defenses/input_filters.py`)
+   - Encoding detection (base64, hex)
+   - Delimiter and tag removal
+   - Harmful keyword blocking
+
+3. **Output Validators** (`defenses/output_validators.py`)
+   - Refusal enforcement
+   - Step-by-step instruction detection
+   - Fiction framing detection
+
+4. **Session Context Tracking** (`defenses/session_context_tracker.py`)
+   - Multi-turn attack detection
+   - Progressive suspicion scoring
+
+## Evaluation System
+
+### Metrics Calculated
+
+- **Overall success rate**: Percentage of successful jailbreaks
+- **Success by category**: Which attack types are most effective
+- **Success by severity**: How severity affects success rates
+- **Baseline vs defense**: Improvement from defense implementation
+- **Top effective attacks**: Individual attacks with highest success
+
+### Running Evaluation
+
+Results are automatically evaluated using keyword-based detection:
+- Refusal patterns (74 phrases)
+- Compliance indicators (18 phrases)
+- Response length analysis
+
+## Results
+
+Test results are saved to the `results/` directory:
+- **CSV files**: Full attack results with all metadata
+- **JSON files**: Aggregated metrics and statistics
+
+### Sample Results (47 prompts tested)
+
+| Metric | No Defense | Strong Defense |
+|--------|------------|----------------|
+| Harmful prompts blocked | 85.2% | 100% |
+| Jailbreak success rate | 14.8% | 0% |
+| Safe prompt false positives | 10% | 10% |
 
 ## License
 
