@@ -213,14 +213,6 @@ Test results are saved to the `results/` directory:
 - **CSV files**: Full attack results with all metadata
 - **JSON files**: Aggregated metrics and statistics
 
-### Sample Results (47 prompts tested)
-
-| Metric | No Defense | Strong Defense |
-|--------|------------|----------------|
-| Harmful prompts blocked | 85.2% | 100% |
-| Jailbreak success rate | 14.8% | 0% |
-| Safe prompt false positives | 10% | 10% |
-
 ## License
 
 This project is for educational purposes as part of CY-590 Adversarial AI coursework.
